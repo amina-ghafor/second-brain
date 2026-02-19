@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "motion-cli"
+version = "0.1.0"
+description = "Auto-rescheduling task manager: reads Backlog.md, detects overdue tasks, reschedules into Google Calendar"
+requires-python = ">=3.11"
+dependencies = [
+    "google-api-python-client>=2.100.0",
+    "google-auth-oauthlib>=1.1.0",
+    "google-auth-httplib2>=0.2.0",
+    "click>=8.1.0",
+    "python-dateutil>=2.8.0",
+    "python-dotenv>=1.0.0",
+    "pytz>=2024.1",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+]
+
+[project.scripts]
+motion = "motion_cli.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["motion_cli*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

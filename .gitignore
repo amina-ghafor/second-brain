@@ -1,0 +1,11 @@
+.venv/
+__pycache__/
+*.egg-info/
+*.pyc
+.pytest_cache/
+dist/
+build/
+.env
+credentials.json
+token.json
+motion.log
