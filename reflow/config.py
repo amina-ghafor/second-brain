@@ -30,6 +30,10 @@ class Config:
     )).expanduser())
     timezone: str = field(default_factory=lambda: _env("TIMEZONE", "Europe/Madrid"))
     calendar_id: str = field(default_factory=lambda: _env("CALENDAR_ID", "primary"))
+    reflow_calendar_id: str = field(default_factory=lambda: _env(
+        "REFLOW_CALENDAR_ID",
+        "your-reflow-calendar-id@group.calendar.google.com"
+    ))
     working_hours_start: int = field(default_factory=lambda: _env_int("WORKING_HOURS_START", 11))
     working_hours_end: int = field(default_factory=lambda: _env_int("WORKING_HOURS_END", 19))
     lunch_start: int = field(default_factory=lambda: _env_int("LUNCH_START", 13))

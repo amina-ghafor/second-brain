@@ -11,7 +11,9 @@ from reflow.scheduler import (
     Reschedule,
     find_slot_for_task,
     get_overdue_tasks,
+    get_schedulable_tasks,
     reschedule_overdue,
+    schedule_all,
 )
 
 
@@ -200,7 +202,7 @@ class TestRescheduleOverdue:
         cal.create_task_event.assert_not_called()
         cal.find_task_event.assert_not_called()
 
-    def test_skips_existing_motion_event(self) -> None:
+    def test_skips_existing_reflow_event(self) -> None:
         import pytz
 
         tz = pytz.timezone("Europe/Madrid")
@@ -208,7 +210,10 @@ class TestRescheduleOverdue:
         config = _make_config()
 
         cal = MagicMock()
-        cal.find_task_event.return_value = {"summary": "[Reflow] Already scheduled"}
+        cal.find_task_event.return_value = {
+            "summary": "Already scheduled",
+            "description": "reflow:managed | From Backlog.md",
+        }
         cal.get_free_slots.return_value = [
             (
                 tz.localize(datetime(2026, 2, 19, 11, 0)),
@@ -218,3 +223,51 @@ class TestRescheduleOverdue:
 
         reschedules = reschedule_overdue([task], cal, config, dry_run=False)
         assert len(reschedules) == 0
+
+
+class TestGetSchedulableTasks:
+    def test_includes_overdue_and_upcoming(self) -> None:
+        today = date(2026, 2, 19)
+        tasks = [
+            _make_task("Overdue", deadline=date(2026, 2, 18)),
+            _make_task("Today", deadline=date(2026, 2, 19)),
+            _make_task("Tomorrow", deadline=date(2026, 2, 20)),
+            _make_task("Far future", deadline=date(2026, 4, 1)),
+        ]
+        schedulable = get_schedulable_tasks(tasks, today)
+        assert len(schedulable) == 3
+        assert [t.name for t in schedulable] == ["Overdue", "Today", "Tomorrow"]
+
+    def test_excludes_done_and_missing_fields(self) -> None:
+        today = date(2026, 2, 19)
+        done_task = _make_task("Done", deadline=date(2026, 2, 20), done=True)
+        no_deadline = _make_task("No deadline")
+        no_deadline.deadline = None
+        no_estimate = _make_task("No estimate", deadline=date(2026, 2, 20))
+        no_estimate.estimate_mins = None
+        assert get_schedulable_tasks([done_task, no_deadline, no_estimate], today) == []
+
+
+class TestScheduleAll:
+    def test_schedules_upcoming_tasks(self) -> None:
+        import pytz
+
+        tz = pytz.timezone("Europe/Madrid")
+        today = date(2026, 2, 19)
+        task = _make_task("Tomorrow task", deadline=date(2026, 2, 20), estimate_mins=60)
+        config = _make_config()
+
+        cal = MagicMock()
+        cal.find_task_event.return_value = None
+        cal.get_free_slots.return_value = [
+            (
+                tz.localize(datetime(2026, 2, 20, 11, 0)),
+                tz.localize(datetime(2026, 2, 20, 13, 0)),
+            ),
+        ]
+
+        reschedules = schedule_all([task], cal, config, dry_run=False)
+        assert len(reschedules) == 1
+        assert reschedules[0].task.name == "Tomorrow task"
+        assert reschedules[0].new_date == date(2026, 2, 20)
+        cal.create_task_event.assert_called_once()

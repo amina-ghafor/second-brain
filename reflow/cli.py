@@ -28,11 +28,12 @@ def main(verbose: bool) -> None:
 
 @main.command()
 @click.option("--dry-run", is_flag=True, help="Show what would be done without making changes.")
-def run(dry_run: bool) -> None:
-    """Detect overdue tasks and reschedule them into free calendar slots."""
+@click.option("--overdue-only", is_flag=True, help="Only reschedule overdue tasks (legacy mode).")
+def run(dry_run: bool, overdue_only: bool) -> None:
+    """Schedule tasks into free calendar slots on the reflow tasks calendar."""
     from reflow.calendar_client import CalendarClient
     from reflow.parser import parse_actionable_tasks
-    from reflow.scheduler import reschedule_overdue
+    from reflow.scheduler import reschedule_overdue, schedule_all
     from reflow.writer import append_daily_note, update_backlog
 
     config = load_config()
@@ -51,7 +52,10 @@ def run(dry_run: bool) -> None:
     cal.authenticate()
 
     # Run the scheduler
-    reschedules = reschedule_overdue(tasks, cal, config, dry_run=dry_run)
+    if overdue_only:
+        reschedules = reschedule_overdue(tasks, cal, config, dry_run=dry_run)
+    else:
+        reschedules = schedule_all(tasks, cal, config, dry_run=dry_run)
 
     if not reschedules:
         click.echo("No tasks to reschedule.")
@@ -82,10 +86,10 @@ def run(dry_run: bool) -> None:
 
 @main.command()
 def status() -> None:
-    """Show overdue tasks and what would be rescheduled (dry run)."""
+    """Show all schedulable tasks and what would be scheduled (dry run)."""
     from reflow.calendar_client import CalendarClient
     from reflow.parser import parse_actionable_tasks
-    from reflow.scheduler import get_overdue_tasks, reschedule_overdue
+    from reflow.scheduler import get_overdue_tasks, get_schedulable_tasks, schedule_all
 
     config = load_config()
 
@@ -95,31 +99,41 @@ def status() -> None:
 
     tasks = parse_actionable_tasks(config.backlog_path)
     overdue = get_overdue_tasks(tasks)
+    schedulable = get_schedulable_tasks(tasks)
 
-    if not overdue:
-        click.echo("No overdue tasks.")
+    if not schedulable:
+        click.echo("No tasks to schedule.")
         return
 
-    click.echo(f"Found {len(overdue)} overdue task(s):\n")
-    for t in overdue:
-        click.echo(f"  - {t.name} (due {t.deadline.strftime('%b %d')}, {t.estimate_mins}m)")
+    if overdue:
+        click.echo(f"Overdue: {len(overdue)} task(s)")
+        for t in overdue:
+            click.echo(f"  - {t.name} (due {t.deadline.strftime('%b %d')}, {t.estimate_mins}m)")
+        click.echo()
 
-    click.echo("\nConnecting to Google Calendar for slot availability...")
+    upcoming = [t for t in schedulable if t not in overdue]
+    if upcoming:
+        click.echo(f"Upcoming: {len(upcoming)} task(s)")
+        for t in upcoming:
+            click.echo(f"  - {t.name} (due {t.deadline.strftime('%b %d')}, {t.estimate_mins}m)")
+        click.echo()
+
+    click.echo("Connecting to Google Calendar for slot availability...")
 
     cal = CalendarClient(config)
     cal.authenticate()
 
-    reschedules = reschedule_overdue(tasks, cal, config, dry_run=True)
+    reschedules = schedule_all(tasks, cal, config, dry_run=True)
 
     if reschedules:
-        click.echo(f"\nProposed reschedules:\n")
+        click.echo(f"\nProposed schedule:\n")
         for r in reschedules:
             click.echo(
                 f"  - {r.task.name}: {r.new_date.strftime('%b %d')} "
                 f"({r.slot_start.strftime('%H:%M')}-{r.slot_end.strftime('%H:%M')})"
             )
     else:
-        click.echo("\nNo slots available for rescheduling in the next "
+        click.echo("\nNo slots available for scheduling in the next "
                     f"{config.lookahead_days} working days.")
 
 

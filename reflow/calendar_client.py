@@ -15,7 +15,7 @@ from reflow.config import Config
 logger = logging.getLogger(__name__)
 
 SCOPES = ["https://www.googleapis.com/auth/calendar"]
-REFLOW_PREFIX = "[Reflow]"
+REFLOW_TAG = "reflow:managed"
 
 
 class CalendarClient:
@@ -59,8 +59,10 @@ class CalendarClient:
             raise RuntimeError("Not authenticated. Call authenticate() first.")
         return self._service
 
-    def get_events(self, date_start: date, date_end: date) -> list[dict]:
-        """List events in the given date range (inclusive)."""
+    def _get_events_from_calendar(
+        self, calendar_id: str, date_start: date, date_end: date
+    ) -> list[dict]:
+        """List events from a specific calendar in the given date range."""
         import pytz
 
         tz = pytz.timezone(self.config.timezone)
@@ -72,7 +74,7 @@ class CalendarClient:
 
         while True:
             result = self.service.events().list(
-                calendarId=self.config.calendar_id,
+                calendarId=calendar_id,
                 timeMin=time_min.isoformat(),
                 timeMax=time_max.isoformat(),
                 singleEvents=True,
@@ -87,8 +89,17 @@ class CalendarClient:
 
         return events
 
+    def get_events(self, date_start: date, date_end: date) -> list[dict]:
+        """List events from the primary calendar in the given date range (inclusive)."""
+        return self._get_events_from_calendar(
+            self.config.calendar_id, date_start, date_end
+        )
+
     def get_free_slots(self, target_date: date) -> list[tuple[datetime, datetime]]:
-        """Return free time blocks for a given day within working hours, excluding lunch."""
+        """Return free time blocks for a given day within working hours, excluding lunch.
+
+        Checks BOTH primary calendar and reflow tasks calendar for occupied slots.
+        """
         import pytz
 
         tz = pytz.timezone(self.config.timezone)
@@ -99,7 +110,15 @@ class CalendarClient:
         lunch_start = tz.localize(datetime.combine(target_date, time(cfg.lunch_start)))
         lunch_end = tz.localize(datetime.combine(target_date, time(cfg.lunch_end)))
 
+        # Get events from primary calendar
         events = self.get_events(target_date, target_date)
+
+        # Also get events from the reflow tasks calendar to avoid double-booking
+        if cfg.reflow_calendar_id != cfg.calendar_id:
+            reflow_events = self._get_events_from_calendar(
+                cfg.reflow_calendar_id, target_date, target_date
+            )
+            events.extend(reflow_events)
 
         # Build list of occupied blocks within working hours
         occupied: list[tuple[datetime, datetime]] = []
@@ -148,19 +167,23 @@ class CalendarClient:
         return free_slots
 
     def find_task_event(self, task_name: str, after_date: date | None = None) -> dict | None:
-        """Find an existing [Reflow] event for a task name.
+        """Find an existing reflow-managed event for a task name.
 
-        Searches from after_date (or today) through the lookahead window.
+        Searches the reflow tasks calendar from after_date through the lookahead window.
+        Matches by task name in the summary and reflow:managed tag in description.
         Returns the event dict if found, None otherwise.
         """
         search_start = after_date or date.today()
         search_end = search_start + timedelta(days=self.config.lookahead_days + 1)
 
-        events = self.get_events(search_start, search_end)
-        target_summary = f"{REFLOW_PREFIX} {task_name}"
+        events = self._get_events_from_calendar(
+            self.config.reflow_calendar_id, search_start, search_end
+        )
 
         for event in events:
-            if event.get("summary", "").strip() == target_summary:
+            desc = event.get("description", "")
+            summary = event.get("summary", "").strip()
+            if REFLOW_TAG in desc and task_name.lower() in summary.lower():
                 return event
 
         return None
@@ -168,31 +191,31 @@ class CalendarClient:
     def create_task_event(
         self, task_name: str, start: datetime, end: datetime
     ) -> dict:
-        """Create a calendar event with [Reflow] prefix."""
+        """Create a calendar event on the reflow tasks calendar."""
         event_body = {
-            "summary": f"{REFLOW_PREFIX} {task_name}",
-            "description": "Auto-scheduled by reflow from Backlog.md",
+            "summary": task_name,
+            "description": f"{REFLOW_TAG} | From Backlog.md",
             "start": {"dateTime": start.isoformat(), "timeZone": self.config.timezone},
             "end": {"dateTime": end.isoformat(), "timeZone": self.config.timezone},
             "colorId": "8",  # grey
         }
 
         event = self.service.events().insert(
-            calendarId=self.config.calendar_id, body=event_body
+            calendarId=self.config.reflow_calendar_id, body=event_body
         ).execute()
 
         logger.info("Created event: %s at %s", event["summary"], start)
         return event
 
     def move_event(self, event_id: str, new_start: datetime, new_end: datetime) -> dict:
-        """Reschedule an existing event."""
+        """Reschedule an existing event on the reflow tasks calendar."""
         event_body = {
             "start": {"dateTime": new_start.isoformat(), "timeZone": self.config.timezone},
             "end": {"dateTime": new_end.isoformat(), "timeZone": self.config.timezone},
         }
 
         event = self.service.events().patch(
-            calendarId=self.config.calendar_id,
+            calendarId=self.config.reflow_calendar_id,
             eventId=event_id,
             body=event_body,
         ).execute()
