@@ -64,8 +64,8 @@ class CalendarClient:
         import pytz
 
         tz = pytz.timezone(self.config.timezone)
-        time_min = datetime.combine(date_start, time.min).replace(tzinfo=tz)
-        time_max = datetime.combine(date_end + timedelta(days=1), time.min).replace(tzinfo=tz)
+        time_min = tz.localize(datetime.combine(date_start, time.min))
+        time_max = tz.localize(datetime.combine(date_end + timedelta(days=1), time.min))
 
         events = []
         page_token = None
