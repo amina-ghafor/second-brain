@@ -6,7 +6,7 @@ from textwrap import dedent
 
 import pytest
 
-from motion_cli.parser import Task, parse_actionable_tasks, parse_backlog
+from reflow.parser import Task, parse_actionable_tasks, parse_backlog
 
 
 @pytest.fixture

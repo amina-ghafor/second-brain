@@ -1,4 +1,4 @@
-"""CLI entry point for motion-cli."""
+"""CLI entry point for reflow."""
 
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ import sys
 
 import click
 
-from motion_cli.config import load_config
+from reflow.config import load_config
 
 
 def _setup_logging(verbose: bool) -> None:
@@ -22,7 +22,7 @@ def _setup_logging(verbose: bool) -> None:
 @click.group()
 @click.option("-v", "--verbose", is_flag=True, help="Enable debug logging.")
 def main(verbose: bool) -> None:
-    """motion-cli: Auto-rescheduling task manager."""
+    """reflow: Auto-rescheduling task manager."""
     _setup_logging(verbose)
 
 
@@ -30,13 +30,13 @@ def main(verbose: bool) -> None:
 @click.option("--dry-run", is_flag=True, help="Show what would be done without making changes.")
 def run(dry_run: bool) -> None:
     """Detect overdue tasks and reschedule them into free calendar slots."""
-    from motion_cli.calendar_client import CalendarClient
-    from motion_cli.parser import parse_actionable_tasks
-    from motion_cli.scheduler import reschedule_overdue
-    from motion_cli.writer import update_backlog
+    from reflow.calendar_client import CalendarClient
+    from reflow.parser import parse_actionable_tasks
+    from reflow.scheduler import reschedule_overdue
+    from reflow.writer import update_backlog
 
     config = load_config()
-    logger = logging.getLogger("motion")
+    logger = logging.getLogger("reflow")
 
     # Parse backlog
     if not config.backlog_path.exists():
@@ -77,9 +77,9 @@ def run(dry_run: bool) -> None:
 @main.command()
 def status() -> None:
     """Show overdue tasks and what would be rescheduled (dry run)."""
-    from motion_cli.calendar_client import CalendarClient
-    from motion_cli.parser import parse_actionable_tasks
-    from motion_cli.scheduler import get_overdue_tasks, reschedule_overdue
+    from reflow.calendar_client import CalendarClient
+    from reflow.parser import parse_actionable_tasks
+    from reflow.scheduler import get_overdue_tasks, reschedule_overdue
 
     config = load_config()
 
@@ -120,7 +120,7 @@ def status() -> None:
 @main.command()
 def auth() -> None:
     """Run the Google OAuth setup flow."""
-    from motion_cli.calendar_client import CalendarClient
+    from reflow.calendar_client import CalendarClient
 
     config = load_config()
 
@@ -129,11 +129,11 @@ def auth() -> None:
             f"credentials.json not found at {config.credentials_path}\n\n"
             "To set up Google Calendar access:\n"
             "1. Go to https://console.cloud.google.com\n"
-            "2. Create a project called 'motion-cli'\n"
+            "2. Create a project called 'reflow'\n"
             "3. Enable the Google Calendar API\n"
             "4. Create OAuth 2.0 credentials (Desktop app)\n"
             f"5. Download credentials.json to {config.credentials_path}\n"
-            "6. Run 'motion auth' again"
+            "6. Run 'reflow auth' again"
         )
         sys.exit(1)
 

@@ -1,4 +1,4 @@
-"""Google Calendar API wrapper for motion-cli."""
+"""Google Calendar API wrapper for reflow."""
 
 from __future__ import annotations
 
@@ -10,12 +10,12 @@ from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 
-from motion_cli.config import Config
+from reflow.config import Config
 
 logger = logging.getLogger(__name__)
 
 SCOPES = ["https://www.googleapis.com/auth/calendar"]
-MOTION_PREFIX = "[Motion]"
+REFLOW_PREFIX = "[Reflow]"
 
 
 class CalendarClient:
@@ -148,7 +148,7 @@ class CalendarClient:
         return free_slots
 
     def find_task_event(self, task_name: str, after_date: date | None = None) -> dict | None:
-        """Find an existing [Motion] event for a task name.
+        """Find an existing [Reflow] event for a task name.
 
         Searches from after_date (or today) through the lookahead window.
         Returns the event dict if found, None otherwise.
@@ -157,7 +157,7 @@ class CalendarClient:
         search_end = search_start + timedelta(days=self.config.lookahead_days + 1)
 
         events = self.get_events(search_start, search_end)
-        target_summary = f"{MOTION_PREFIX} {task_name}"
+        target_summary = f"{REFLOW_PREFIX} {task_name}"
 
         for event in events:
             if event.get("summary", "").strip() == target_summary:
@@ -168,10 +168,10 @@ class CalendarClient:
     def create_task_event(
         self, task_name: str, start: datetime, end: datetime
     ) -> dict:
-        """Create a calendar event with [Motion] prefix."""
+        """Create a calendar event with [Reflow] prefix."""
         event_body = {
-            "summary": f"{MOTION_PREFIX} {task_name}",
-            "description": "Auto-scheduled by motion-cli from Backlog.md",
+            "summary": f"{REFLOW_PREFIX} {task_name}",
+            "description": "Auto-scheduled by reflow from Backlog.md",
             "start": {"dateTime": start.isoformat(), "timeZone": self.config.timezone},
             "end": {"dateTime": end.isoformat(), "timeZone": self.config.timezone},
             "colorId": "8",  # grey

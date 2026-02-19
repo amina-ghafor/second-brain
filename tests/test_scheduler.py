@@ -5,9 +5,9 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from motion_cli.config import Config
-from motion_cli.parser import Task
-from motion_cli.scheduler import (
+from reflow.config import Config
+from reflow.parser import Task
+from reflow.scheduler import (
     Reschedule,
     find_slot_for_task,
     get_overdue_tasks,
@@ -189,7 +189,7 @@ class TestRescheduleOverdue:
         ]
 
         # Patch date.today
-        import motion_cli.scheduler as sched
+        import reflow.scheduler as sched
         original_get_overdue = sched.get_overdue_tasks
 
         reschedules = reschedule_overdue([task], cal, config, dry_run=True)
@@ -208,7 +208,7 @@ class TestRescheduleOverdue:
         config = _make_config()
 
         cal = MagicMock()
-        cal.find_task_event.return_value = {"summary": "[Motion] Already scheduled"}
+        cal.find_task_event.return_value = {"summary": "[Reflow] Already scheduled"}
         cal.get_free_slots.return_value = [
             (
                 tz.localize(datetime(2026, 2, 19, 11, 0)),

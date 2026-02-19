@@ -1,4 +1,4 @@
-"""Settings for motion-cli, overridable via .env or environment variables."""
+"""Settings for reflow, overridable via .env or environment variables."""
 
 from __future__ import annotations
 
@@ -36,10 +36,10 @@ class Config:
     lunch_end: int = field(default_factory=lambda: _env_int("LUNCH_END", 14))
     lookahead_days: int = field(default_factory=lambda: _env_int("LOOKAHEAD_DAYS", 5))
     credentials_path: Path = field(default_factory=lambda: Path(_env(
-        "CREDENTIALS_PATH", "~/Code/motion-cli/credentials.json"
+        "CREDENTIALS_PATH", "~/Code/reflow/credentials.json"
     )).expanduser())
     token_path: Path = field(default_factory=lambda: Path(_env(
-        "TOKEN_PATH", "~/Code/motion-cli/token.json"
+        "TOKEN_PATH", "~/Code/reflow/token.json"
     )).expanduser())
 
 

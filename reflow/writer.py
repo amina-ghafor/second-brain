@@ -8,8 +8,8 @@ import tempfile
 from datetime import date
 from pathlib import Path
 
-from motion_cli.parser import Task
-from motion_cli.scheduler import Reschedule
+from reflow.parser import Task
+from reflow.scheduler import Reschedule
 
 logger = logging.getLogger(__name__)
 

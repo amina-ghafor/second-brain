@@ -3,7 +3,7 @@ requires = ["setuptools>=68.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "motion-cli"
+name = "reflow"
 version = "0.1.0"
 description = "Auto-rescheduling task manager: reads Backlog.md, detects overdue tasks, reschedules into Google Calendar"
 requires-python = ">=3.11"
@@ -23,10 +23,10 @@ dev = [
 ]
 
 [project.scripts]
-motion = "motion_cli.cli:main"
+reflow = "reflow.cli:main"
 
 [tool.setuptools.packages.find]
-include = ["motion_cli*"]
+include = ["reflow*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

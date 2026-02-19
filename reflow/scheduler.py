@@ -6,9 +6,9 @@ import logging
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 
-from motion_cli.calendar_client import CalendarClient
-from motion_cli.config import Config
-from motion_cli.parser import Task
+from reflow.calendar_client import CalendarClient
+from reflow.config import Config
+from reflow.parser import Task
 
 logger = logging.getLogger(__name__)
 
@@ -112,11 +112,11 @@ def reschedule_overdue(
     reschedules: list[Reschedule] = []
 
     for task in overdue:
-        # Idempotency check: skip if a [Motion] event already exists
+        # Idempotency check: skip if a [Reflow] event already exists
         if not dry_run:
             existing = calendar_client.find_task_event(task.name, today)
             if existing:
-                logger.info("Skipping '%s': already has a [Motion] event", task.name)
+                logger.info("Skipping '%s': already has a [Reflow] event", task.name)
                 continue
 
         # Find a free slot
