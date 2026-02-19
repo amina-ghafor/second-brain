@@ -1,9 +1,8 @@
-"""Update Backlog.md with new task dates."""
+"""Update Backlog.md and daily notes with rescheduled tasks."""
 
 from __future__ import annotations
 
 import logging
-import re
 import tempfile
 from datetime import date
 from pathlib import Path
@@ -138,3 +137,63 @@ def update_backlog(backlog_path: Path, reschedules: list[Reschedule]) -> int:
 
     logger.info("Updated %d task(s) in %s", updated_count, backlog_path)
     return updated_count
+
+
+def append_daily_note(daily_notes_dir: Path, reschedules: list[Reschedule]) -> Path | None:
+    """Append a 'Rescheduled by Reflow' section to today's daily note.
+
+    Creates the note if it doesn't exist. Appends before the End of Day Review
+    section if found, otherwise appends at the end.
+
+    Returns the path to the daily note, or None if nothing to write.
+    """
+    if not reschedules:
+        return None
+
+    today = date.today()
+    note_path = daily_notes_dir / f"{today.isoformat()}.md"
+
+    # Build the reflow summary
+    lines = [
+        "",
+        "## Rescheduled by Reflow",
+        "",
+    ]
+    for r in reschedules:
+        lines.append(
+            f"- **{r.task.name}** was due {_format_date(r.task.deadline)}, "
+            f"moved to {_format_date(r.new_date)} "
+            f"({r.slot_start.strftime('%H:%M')}-{r.slot_end.strftime('%H:%M')})"
+        )
+    lines.append("")
+
+    summary = "\n".join(lines)
+
+    if note_path.exists():
+        content = note_path.read_text(encoding="utf-8")
+
+        # Don't add duplicate section
+        if "## Rescheduled by Reflow" in content:
+            logger.info("Reflow section already exists in %s, skipping", note_path)
+            return note_path
+
+        # Insert before End of Day Review if present
+        eod_marker = "> [!tip] End of Day Review"
+        if eod_marker in content:
+            # Insert before the --- that precedes the EOD section
+            parts = content.split(eod_marker, 1)
+            # Find the last --- before the EOD marker
+            before = parts[0]
+            if before.rstrip().endswith("---"):
+                before = before.rstrip()[:-3].rstrip()
+            content = before + summary + "\n---\n\n" + eod_marker + parts[1]
+        else:
+            content = content.rstrip() + "\n" + summary
+
+        note_path.write_text(content, encoding="utf-8")
+    else:
+        # Create a minimal daily note with just the reflow section
+        note_path.write_text(summary.lstrip(), encoding="utf-8")
+
+    logger.info("Added reflow summary to %s", note_path)
+    return note_path

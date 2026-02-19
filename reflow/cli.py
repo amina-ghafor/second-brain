@@ -33,7 +33,7 @@ def run(dry_run: bool) -> None:
     from reflow.calendar_client import CalendarClient
     from reflow.parser import parse_actionable_tasks
     from reflow.scheduler import reschedule_overdue
-    from reflow.writer import update_backlog
+    from reflow.writer import append_daily_note, update_backlog
 
     config = load_config()
     logger = logging.getLogger("reflow")
@@ -66,10 +66,16 @@ def run(dry_run: bool) -> None:
             f"({r.slot_start.strftime('%H:%M')}-{r.slot_end.strftime('%H:%M')})"
         )
 
-    # Update backlog (skip in dry run)
+    # Update backlog and daily note (skip in dry run)
     if not dry_run:
         updated = update_backlog(config.backlog_path, reschedules)
         click.echo(f"\nUpdated {updated} task(s) in Backlog.md")
+
+        daily_notes_dir = config.backlog_path.parent.parent / "Daily Notes"
+        if daily_notes_dir.exists():
+            note_path = append_daily_note(daily_notes_dir, reschedules)
+            if note_path:
+                click.echo(f"Added summary to {note_path.name}")
     else:
         click.echo(f"\n{len(reschedules)} task(s) would be rescheduled.")
 
