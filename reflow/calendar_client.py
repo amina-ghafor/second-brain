@@ -114,8 +114,8 @@ class CalendarClient:
             if "date" in start_raw and "dateTime" not in start_raw:
                 continue
 
-            evt_start = datetime.fromisoformat(start_raw["dateTime"])
-            evt_end = datetime.fromisoformat(end_raw["dateTime"])
+            evt_start = datetime.fromisoformat(start_raw["dateTime"]).astimezone(tz)
+            evt_end = datetime.fromisoformat(end_raw["dateTime"]).astimezone(tz)
 
             # Clamp to working hours
             evt_start = max(evt_start, work_start)
