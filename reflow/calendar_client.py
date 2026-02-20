@@ -152,9 +152,16 @@ class CalendarClient:
             else:
                 merged.append((start, end))
 
+        # Skip past time when scheduling for today
+        now = datetime.now(tz)
+        if target_date == now.date():
+            cursor_floor = now
+        else:
+            cursor_floor = work_start
+
         # Calculate gaps
         free_slots: list[tuple[datetime, datetime]] = []
-        cursor = work_start
+        cursor = max(work_start, cursor_floor)
 
         for block_start, block_end in merged:
             if cursor < block_start:

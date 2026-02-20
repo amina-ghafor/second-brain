@@ -1,7 +1,7 @@
 """Tests for the scheduler module."""
 
 from datetime import date, datetime, timedelta
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -246,6 +246,78 @@ class TestGetSchedulableTasks:
         no_estimate = _make_task("No estimate", deadline=date(2026, 2, 20))
         no_estimate.estimate_mins = None
         assert get_schedulable_tasks([done_task, no_deadline, no_estimate], today) == []
+
+
+class TestFreeSlotsSkipsPastTime:
+    def test_today_excludes_past_slots(self) -> None:
+        """Free slots before the current time should not be returned."""
+        import pytz
+
+        from reflow.calendar_client import CalendarClient
+
+        tz = pytz.timezone("Europe/Madrid")
+        today = date(2026, 2, 20)
+        config = _make_config()
+        config.calendar_id = "primary"
+        config.reflow_calendar_id = "primary"
+        config.token_path = MagicMock()
+
+        cal = CalendarClient.__new__(CalendarClient)
+        cal.config = config
+        cal._service = MagicMock()
+
+        # No events - whole day is free in theory
+        cal._service.events.return_value.list.return_value.execute.return_value = {
+            "items": [],
+            "nextPageToken": None,
+        }
+
+        # Freeze "now" to 15:00 Madrid time
+        fake_now = tz.localize(datetime(2026, 2, 20, 15, 0))
+        with patch("reflow.calendar_client.datetime") as mock_dt:
+            mock_dt.now.return_value = fake_now
+            mock_dt.combine = datetime.combine
+            mock_dt.fromisoformat = datetime.fromisoformat
+            slots = cal.get_free_slots(today)
+
+        # All slots should start at or after 15:00
+        for slot_start, slot_end in slots:
+            assert slot_start >= fake_now, (
+                f"Slot {slot_start} is before current time {fake_now}"
+            )
+
+    def test_future_date_includes_full_day(self) -> None:
+        """Free slots for a future date should include the full working day."""
+        import pytz
+
+        from reflow.calendar_client import CalendarClient
+
+        tz = pytz.timezone("Europe/Madrid")
+        future = date(2026, 2, 21)
+        config = _make_config()
+        config.calendar_id = "primary"
+        config.reflow_calendar_id = "primary"
+        config.token_path = MagicMock()
+
+        cal = CalendarClient.__new__(CalendarClient)
+        cal.config = config
+        cal._service = MagicMock()
+
+        cal._service.events.return_value.list.return_value.execute.return_value = {
+            "items": [],
+            "nextPageToken": None,
+        }
+
+        # Even though "now" is 15:00 today, future date should have full slots
+        fake_now = tz.localize(datetime(2026, 2, 20, 15, 0))
+        with patch("reflow.calendar_client.datetime") as mock_dt:
+            mock_dt.now.return_value = fake_now
+            mock_dt.combine = datetime.combine
+            mock_dt.fromisoformat = datetime.fromisoformat
+            slots = cal.get_free_slots(future)
+
+        # First slot should start at 11:00 (work_start)
+        assert slots[0][0].hour == 11
 
 
 class TestScheduleAll:
