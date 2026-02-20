@@ -35,7 +35,7 @@ def run(dry_run: bool, overdue_only: bool) -> None:
     from reflow.parser import parse_actionable_tasks, parse_backlog
     from reflow.recurrence import find_recurring_completions
     from reflow.scheduler import reschedule_overdue, schedule_all
-    from reflow.writer import append_daily_note, insert_recurring_tasks, update_backlog
+    from reflow.writer import append_daily_note, insert_recurring_tasks, update_backlog, write_schedule_summary
 
     config = load_config()
     logger = logging.getLogger("reflow")
@@ -97,6 +97,10 @@ def run(dry_run: bool, overdue_only: bool) -> None:
             note_path = append_daily_note(daily_notes_dir, reschedules)
             if note_path:
                 click.echo(f"Added summary to {note_path.name}")
+
+        # Write schedule summary for standup prep
+        summary_path = write_schedule_summary(cal, config)
+        click.echo(f"Wrote schedule summary to {summary_path.name}")
     else:
         click.echo(f"\n{len(reschedules)} task(s) would be rescheduled.")
 

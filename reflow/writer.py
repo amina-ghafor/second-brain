@@ -4,9 +4,11 @@ from __future__ import annotations
 
 import logging
 import tempfile
-from datetime import date
+from datetime import date, datetime, timedelta
 from pathlib import Path
 
+from reflow.calendar_client import CalendarClient
+from reflow.config import Config
 from reflow.parser import Task
 from reflow.scheduler import Reschedule
 
@@ -269,3 +271,73 @@ def append_daily_note(daily_notes_dir: Path, reschedules: list[Reschedule]) -> P
 
     logger.info("Added reflow summary to %s", note_path)
     return note_path
+
+
+# Default location for the schedule summary file
+SCHEDULE_SUMMARY_PATH = Path.home() / "Code" / "reflow" / "schedule.md"
+
+
+def write_schedule_summary(
+    cal: CalendarClient,
+    config: Config,
+    output_path: Path | None = None,
+) -> Path:
+    """Query the reflow tasks calendar for this week's events and write a summary.
+
+    The summary file can be read by a separate morning-prep step.
+    Returns the path to the written file.
+    """
+    import pytz
+
+    output_path = output_path or SCHEDULE_SUMMARY_PATH
+    today = date.today()
+    tz = pytz.timezone(config.timezone)
+
+    # Mon-Fri of this week
+    monday = today - timedelta(days=today.weekday())
+    friday = monday + timedelta(days=4)
+
+    events = cal._get_events_from_calendar(
+        config.reflow_calendar_id, monday, friday
+    )
+
+    # Group events by date
+    by_date: dict[date, list[dict]] = {}
+    for event in events:
+        start_raw = event.get("start", {})
+        if "dateTime" not in start_raw:
+            continue  # skip all-day events
+
+        evt_start = datetime.fromisoformat(start_raw["dateTime"]).astimezone(tz)
+        evt_end = datetime.fromisoformat(event["end"]["dateTime"]).astimezone(tz)
+        evt_date = evt_start.date()
+
+        if evt_date not in by_date:
+            by_date[evt_date] = []
+        by_date[evt_date].append({
+            "name": event.get("summary", "Untitled"),
+            "start": evt_start,
+            "end": evt_end,
+        })
+
+    # Render summary
+    lines = [f"# Reflow Schedule -- {today.isoformat()}", ""]
+
+    for i in range(5):
+        day = monday + timedelta(days=i)
+        lines.append(f"## {day.isoformat()}")
+        day_events = by_date.get(day, [])
+        if day_events:
+            day_events.sort(key=lambda e: e["start"])
+            for evt in day_events:
+                dur_mins = int((evt["end"] - evt["start"]).total_seconds() / 60)
+                start_str = evt["start"].strftime("%H:%M")
+                end_str = evt["end"].strftime("%H:%M")
+                lines.append(f"- {evt['name']} | {start_str}-{end_str} | {dur_mins}m")
+        else:
+            lines.append("(none)")
+        lines.append("")
+
+    output_path.write_text("\n".join(lines), encoding="utf-8")
+    logger.info("Wrote schedule summary to %s", output_path)
+    return output_path
