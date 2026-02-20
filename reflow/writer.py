@@ -139,6 +139,78 @@ def update_backlog(backlog_path: Path, reschedules: list[Reschedule]) -> int:
     return updated_count
 
 
+def insert_recurring_tasks(
+    backlog_path: Path,
+    recurring: list[tuple[Task, date]],
+) -> int:
+    """Insert next occurrences of completed recurring tasks into the Upcoming section.
+
+    Takes the completed task's raw_line, unchecks it, and swaps the date.
+    Returns the number of tasks inserted.
+    """
+    if not recurring:
+        return 0
+
+    text = backlog_path.read_text(encoding="utf-8")
+    lines = text.splitlines()
+
+    # Build the new task lines
+    new_lines: list[str] = []
+    for task, next_date in recurring:
+        line = task.raw_line
+        # Uncheck: [x] -> [ ]
+        line = line.replace("- [x] ", "- [ ] ", 1)
+        # Swap the date
+        if task.deadline:
+            line = _replace_date_in_line(line, task.deadline, next_date)
+        new_lines.append(line)
+
+    # Find the Upcoming section and insert at the end of its task list
+    section_header = "## Upcoming"
+    inserted = False
+    for i, line in enumerate(lines):
+        if line.strip() == section_header:
+            insert_at = i + 1
+            while insert_at < len(lines) and lines[insert_at].strip() == "":
+                insert_at += 1
+            while insert_at < len(lines) and lines[insert_at].startswith("- ["):
+                insert_at += 1
+            for j, new_line in enumerate(new_lines):
+                lines.insert(insert_at + j, new_line)
+            inserted = True
+            break
+
+    if not inserted:
+        logger.warning("Upcoming section not found, appending to end")
+        lines.extend(new_lines)
+
+    # Atomic write
+    new_text = "\n".join(lines) + "\n"
+    tmp = tempfile.NamedTemporaryFile(
+        mode="w",
+        dir=backlog_path.parent,
+        suffix=".tmp",
+        delete=False,
+        encoding="utf-8",
+    )
+    try:
+        tmp.write(new_text)
+        tmp.close()
+        Path(tmp.name).replace(backlog_path)
+    except Exception:
+        Path(tmp.name).unlink(missing_ok=True)
+        raise
+
+    for task, next_date in recurring:
+        logger.info(
+            "Generated next occurrence: '%s' due %s",
+            task.name,
+            _format_date(next_date),
+        )
+
+    return len(new_lines)
+
+
 def append_daily_note(daily_notes_dir: Path, reschedules: list[Reschedule]) -> Path | None:
     """Append a 'Rescheduled by Reflow' section to today's daily note.
 

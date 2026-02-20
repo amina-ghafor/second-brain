@@ -20,6 +20,7 @@ class Task:
     tags: list[str] = field(default_factory=list)
     section: str = ""
     line_number: int = 0
+    recurrence: str | None = None
 
 
 # Matches: - [ ] Name — Date (estimate) #tag1 #tag2
@@ -32,6 +33,7 @@ _TASK_RE = re.compile(
     r")?"
     r"(?:\s*\((\d+\.?\d*[mh])\))?"  # optional estimate like (1h), (30m), (1.5h)
     r"((?:\s+#\w+)*)"       # optional tags
+    r"(?:\s+@(\w+:\w+))?"   # optional recurrence like @monthly:18
     r"\s*$"
 )
 
@@ -94,7 +96,7 @@ def parse_backlog(backlog_path: Path) -> list[Task]:
         if not match:
             continue
 
-        checkbox, name, date_str, est_str, tag_str = match.groups()
+        checkbox, name, date_str, est_str, tag_str, recurrence_str = match.groups()
         done = checkbox == "x"
         deadline = _parse_date(date_str or "")
         estimate = _parse_estimate(est_str or "")
@@ -109,6 +111,7 @@ def parse_backlog(backlog_path: Path) -> list[Task]:
             tags=tags,
             section=current_section,
             line_number=i,
+            recurrence=recurrence_str,
         )
         tasks.append(task)
 

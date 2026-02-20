@@ -32,9 +32,10 @@ def main(verbose: bool) -> None:
 def run(dry_run: bool, overdue_only: bool) -> None:
     """Schedule tasks into free calendar slots on the reflow tasks calendar."""
     from reflow.calendar_client import CalendarClient
-    from reflow.parser import parse_actionable_tasks
+    from reflow.parser import parse_actionable_tasks, parse_backlog
+    from reflow.recurrence import find_recurring_completions
     from reflow.scheduler import reschedule_overdue, schedule_all
-    from reflow.writer import append_daily_note, update_backlog
+    from reflow.writer import append_daily_note, insert_recurring_tasks, update_backlog
 
     config = load_config()
     logger = logging.getLogger("reflow")
@@ -44,6 +45,22 @@ def run(dry_run: bool, overdue_only: bool) -> None:
         logger.error("Backlog not found at %s", config.backlog_path)
         sys.exit(1)
 
+    # Handle recurring tasks before scheduling
+    all_tasks = parse_backlog(config.backlog_path)
+    recurring = find_recurring_completions(all_tasks)
+
+    if recurring:
+        for task, next_date in recurring:
+            prefix = "[DRY RUN] Would generate" if dry_run else "Generating"
+            click.echo(
+                f"{prefix}: {task.name} due {next_date.strftime('%b %d')}"
+            )
+
+        if not dry_run:
+            count = insert_recurring_tasks(config.backlog_path, recurring)
+            click.echo(f"Inserted {count} recurring task(s) into Upcoming.")
+
+    # Parse actionable tasks (re-read after recurring inserts)
     tasks = parse_actionable_tasks(config.backlog_path)
     logger.info("Parsed %d actionable tasks from backlog", len(tasks))
 

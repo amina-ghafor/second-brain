@@ -153,3 +153,36 @@ def test_parse_multi_hour_estimate(tmp_path: Path) -> None:
 
     assert task_map["Big task"].estimate_mins == 120
     assert task_map["Half task"].estimate_mins == 90
+
+
+def test_parse_recurrence_monthly(tmp_path: Path) -> None:
+    content = "## Work\n\n- [ ] Do monthly invoice — Feb 18 (30m) #work @monthly:18\n"
+    backlog = tmp_path / "Backlog.md"
+    backlog.write_text(content)
+
+    tasks = parse_backlog(backlog)
+    assert len(tasks) == 1
+    assert tasks[0].recurrence == "monthly:18"
+    assert tasks[0].name == "Do monthly invoice"
+    assert tasks[0].tags == ["#work"]
+
+
+def test_parse_recurrence_absent(tmp_path: Path) -> None:
+    content = "## Work\n\n- [ ] Regular task — Feb 20 (1h) #work\n"
+    backlog = tmp_path / "Backlog.md"
+    backlog.write_text(content)
+
+    tasks = parse_backlog(backlog)
+    assert len(tasks) == 1
+    assert tasks[0].recurrence is None
+
+
+def test_parse_done_with_recurrence(tmp_path: Path) -> None:
+    content = "## Work\n\n- [x] Do monthly invoice — Feb 18 (30m) #work @monthly:18\n"
+    backlog = tmp_path / "Backlog.md"
+    backlog.write_text(content)
+
+    tasks = parse_backlog(backlog)
+    assert len(tasks) == 1
+    assert tasks[0].done is True
+    assert tasks[0].recurrence == "monthly:18"
