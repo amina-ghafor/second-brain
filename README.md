@@ -1,4 +1,4 @@
-# second-brain
+# 🧠 second-brain
 
 A task list only helps if the dates on it are true. Most backlogs drift: you set deadlines, they pass, and you either move everything by hand each morning or stop trusting the list.
 
