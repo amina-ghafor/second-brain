@@ -96,13 +96,13 @@ def test_parse_tags(sample_backlog: Path) -> None:
 
 
 def test_parse_dates(sample_backlog: Path) -> None:
-    tasks = parse_backlog(sample_backlog)
+    # Pin "today" so bare dates like "Feb 20" resolve deterministically.
+    tasks = parse_backlog(sample_backlog, today=date(2026, 3, 6))
     task_map = {t.name: t for t in tasks}
 
-    year = date.today().year
-    assert task_map["Update payrise request"].deadline == date(year, 2, 20)
-    assert task_map["Check booking status"].deadline == date(year, 2, 23)
-    assert task_map["Improper sequencing"].deadline == date(year, 3, 5)
+    assert task_map["Update payrise request"].deadline == date(2026, 2, 20)
+    assert task_map["Check booking status"].deadline == date(2026, 2, 23)
+    assert task_map["Improper sequencing"].deadline == date(2026, 3, 5)
 
 
 def test_no_deadline_tasks(sample_backlog: Path) -> None:

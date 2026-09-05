@@ -338,7 +338,7 @@ class TestScheduleAll:
             ),
         ]
 
-        reschedules = schedule_all([task], cal, config, dry_run=False)
+        reschedules = schedule_all([task], cal, config, dry_run=False, today=today)
         assert len(reschedules) == 1
         assert reschedules[0].task.name == "Tomorrow task"
         assert reschedules[0].new_date == date(2026, 2, 20)

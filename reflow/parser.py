@@ -38,17 +38,18 @@ _TASK_RE = re.compile(
 )
 
 
-def _parse_date(date_str: str) -> date | None:
+def _parse_date(date_str: str, today: date | None = None) -> date | None:
     """Parse 'Feb 20', 'Mar 5' etc. into a date object.
 
     Assumes the current year, rolling forward if the date appears to be
-    in the distant past (i.e. more than 6 months ago).
+    in the distant past (i.e. more than 6 months ago). ``today`` can be
+    passed in for deterministic tests; it defaults to the system date.
     """
     if not date_str:
         return None
     try:
         parsed = dateutil_parser.parse(date_str, fuzzy=False)
-        today = date.today()
+        today = today or date.today()
         result = parsed.date().replace(year=today.year)
         # If the parsed date is more than 6 months in the past,
         # assume it means next year
@@ -75,10 +76,12 @@ def _parse_tags(tag_str: str) -> list[str]:
     return re.findall(r"#\w+", tag_str)
 
 
-def parse_backlog(backlog_path: Path) -> list[Task]:
+def parse_backlog(backlog_path: Path, today: date | None = None) -> list[Task]:
     """Parse a Backlog.md file and return a list of Task objects.
 
     Skips tasks that are done, have no deadline, or have no estimate.
+    ``today`` is used to resolve bare dates like "Feb 20" to a year and
+    defaults to the system date.
     """
     text = backlog_path.read_text(encoding="utf-8")
     lines = text.splitlines()
@@ -98,7 +101,7 @@ def parse_backlog(backlog_path: Path) -> list[Task]:
 
         checkbox, name, date_str, est_str, tag_str, recurrence_str = match.groups()
         done = checkbox == "x"
-        deadline = _parse_date(date_str or "")
+        deadline = _parse_date(date_str or "", today)
         estimate = _parse_estimate(est_str or "")
         tags = _parse_tags(tag_str or "")
 
@@ -118,9 +121,9 @@ def parse_backlog(backlog_path: Path) -> list[Task]:
     return tasks
 
 
-def parse_actionable_tasks(backlog_path: Path) -> list[Task]:
+def parse_actionable_tasks(backlog_path: Path, today: date | None = None) -> list[Task]:
     """Parse backlog and return only actionable tasks (not done, has deadline and estimate)."""
     return [
-        t for t in parse_backlog(backlog_path)
+        t for t in parse_backlog(backlog_path, today)
         if not t.done and t.deadline is not None and t.estimate_mins is not None
     ]

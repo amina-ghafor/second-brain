@@ -133,12 +133,13 @@ def reschedule_overdue(
     calendar_client: CalendarClient,
     config: Config,
     dry_run: bool = False,
+    today: date | None = None,
 ) -> list[Reschedule]:
     """Legacy function: find overdue tasks and reschedule them.
 
     Returns a list of Reschedule actions taken (or that would be taken if dry_run).
     """
-    today = date.today()
+    today = today or date.today()
     overdue = get_overdue_tasks(tasks, today)
 
     if not overdue:
@@ -154,6 +155,7 @@ def schedule_all(
     calendar_client: CalendarClient,
     config: Config,
     dry_run: bool = False,
+    today: date | None = None,
 ) -> list[Reschedule]:
     """Schedule all tasks with deadlines into free calendar slots.
 
@@ -162,7 +164,7 @@ def schedule_all(
 
     Returns a list of Reschedule actions taken (or that would be taken if dry_run).
     """
-    today = date.today()
+    today = today or date.today()
     schedulable = get_schedulable_tasks(tasks, today)
 
     if not schedulable:

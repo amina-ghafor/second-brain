@@ -141,7 +141,7 @@ class TestRecurrenceIntegration:
         backlog = tmp_path / "Backlog.md"
         backlog.write_text(content)
 
-        all_tasks = parse_backlog(backlog)
+        all_tasks = parse_backlog(backlog, today=date(2026, 2, 20))
         recurring = find_recurring_completions(all_tasks)
 
         assert len(recurring) == 1
@@ -162,7 +162,7 @@ class TestRecurrenceIntegration:
         backlog = tmp_path / "Backlog.md"
         backlog.write_text(content)
 
-        all_tasks = parse_backlog(backlog)
+        all_tasks = parse_backlog(backlog, today=date(2026, 2, 20))
         recurring = find_recurring_completions(all_tasks)
 
         assert len(recurring) == 1
