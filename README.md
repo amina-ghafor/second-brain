@@ -4,7 +4,7 @@ Run your work off one task list. The backlog is a plain Markdown file in an Obsi
 
 Built for my own use and generalised here. No web app and no server: a text file, a calendar, and a cron job.
 
-## The parts
+## 🧩 The parts
 
 **reflow** - the scheduler. It parses `Backlog.md` for tasks that have a deadline and a time estimate, picks out the overdue ones, scans the next few working days for a free calendar slot, books each task, and updates its date in the file. Tick off a recurring task and the next occurrence is written back in. Run it on a daily cron and the day is planned before you sit down.
 
@@ -12,11 +12,7 @@ Built for my own use and generalised here. No web app and no server: a text file
 
 **The commands** - one prompt file each, in `skills/`. `dayplan` builds the day from the calendar and the backlog. `capture` writes a finished session into the right notes. More will land here one at a time, each with its own note on what it does and where it helps.
 
-## Status
-
-reflow runs and is tested. The commands are being ported across from my working setup.
-
-## The backlog format
+## 📋 The backlog format
 
 `Backlog.md` is divided into sections, read in this priority order:
 
@@ -31,7 +27,7 @@ A task line:
 ```markdown
 - [ ] Task name — Sep 20 (1h) #tag
 - [ ] Do monthly report — Sep 18 (30m) #work @monthly:18
-- [ ] Prep for the quarterly review — Sep 24 (1h) #work @monthly:4tue
+- [ ] Prep the quarterly review — Sep 24 (1h) #work @monthly:4tue
 ```
 
 An em dash separates the name from the metadata. Estimates are `1h`, `30m`, `1.5h`. Recurrence:
@@ -41,7 +37,11 @@ An em dash separates the name from the metadata. Estimates are `1h`, `30m`, `1.5
 
 Mark a recurring task `[x]` and the next occurrence is generated in the Upcoming section on the next run.
 
-## Setup
+### Obsidian
+
+No plugin is required. `Backlog.md` is plain Markdown with `##` headings and checkboxes, so it renders and edits as-is. If you want a board view, the [Kanban](https://github.com/mgmeyers/obsidian-kanban) plugin reads the same `## section` / `- [ ]` structure; keep the `— date (estimate)` suffix on each card and reflow still parses it. The [Tasks](https://github.com/obsidian-tasks-group/obsidian-tasks) plugin is useful for filtering but uses its own date format, so leave reflow's dates as they are.
+
+## ⚙️ Setup
 
 ### 1. Install
 
@@ -74,7 +74,7 @@ Copy `.env.example` to `.env` and edit. Defaults:
 
 - **Backlog:** `~/Projects/Tasks/Backlog.md`
 - **Timezone:** `Europe/London`
-- **Working hours:** 11:00-19:00, lunch 13:00-14:00
+- **Working hours:** 09:00-17:00, lunch 13:00-14:00
 - **Lookahead:** 5 working days
 - **Reads** busy times from your primary calendar; **creates** events on a separate calendar set by `REFLOW_CALENDAR_ID`, so the scheduled blocks stay visually distinct.
 
@@ -112,8 +112,8 @@ source .venv/bin/activate
 pytest tests/ -v
 ```
 
-## Why
+## 💡 Why
 
-A backlog is only honest if it reschedules itself. A list of deadlines you set last week and never move is a wish list, not a plan. Moving that work by hand every morning is the task most likely to be skipped on the mornings it matters. reflow does the moving, so the backlog stays true to what is actually left.
+A backlog only works if it reschedules itself. Deadlines you set last week and never move are a wish list. Doing that by hand every morning is the first thing to slip on a busy day, so reflow does it, and the file stays honest about what is actually left.
 
-The cost is worth naming: a scheduler that always finds room can hide an overcommitted list rather than force the cut. The file is plain text so you can see the pile and make that call yourself. The tool schedules; it does not decide what matters.
+This has a limit. A scheduler that keeps finding room can carry an overcommitted list for weeks without ever forcing a decision. The backlog stays plain text so you can see the pile and decide what to drop.

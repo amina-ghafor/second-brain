@@ -62,7 +62,7 @@ cares about their order, not their names.
 
 ## Working hours
 
-Default: 11:00–19:00, lunch 13:00–14:00 (Europe/London). Configurable via .env.
+Default: 09:00-17:00, lunch 13:00-14:00 (Europe/London). Configurable via .env.
 
 ## Commands
 

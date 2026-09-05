@@ -22,8 +22,8 @@ def sample_backlog(tmp_path: Path) -> Path:
 
         ## Due This Week
 
-        - [ ] Update payrise request — Feb 20 (1h) #work
-        - [ ] Record demo on witness flow OGG — Feb 20 (1h) #work #product
+        - [ ] Update project brief — Feb 20 (1h) #work
+        - [ ] Record the release demo — Feb 20 (1h) #work #product
         - [x] Already done task — Feb 19 (30m) #work
         - [ ] No estimate task — Feb 20 #work
 
@@ -35,7 +35,7 @@ def sample_backlog(tmp_path: Path) -> Path:
         ## No Deadline
 
         - [ ] Finish The Source #personal
-        - [ ] Plan India bday weekend (1h) #personal #travel
+        - [ ] Plan a weekend away (1h) #personal #travel
 
         ## Personal
 
@@ -50,10 +50,10 @@ def test_parse_backlog_finds_all_tasks(sample_backlog: Path) -> None:
     tasks = parse_backlog(sample_backlog)
     # Should find all checkbox lines (done and not done, with and without dates)
     names = [t.name for t in tasks]
-    assert "Update payrise request" in names
+    assert "Update project brief" in names
     assert "Already done task" in names
     assert "Finish The Source" in names
-    assert "Plan India bday weekend" in names
+    assert "Plan a weekend away" in names
 
 
 def test_parse_backlog_sections(sample_backlog: Path) -> None:
@@ -61,7 +61,7 @@ def test_parse_backlog_sections(sample_backlog: Path) -> None:
     task_map = {t.name: t for t in tasks}
 
     assert task_map["Old task"].section == "Overdue"
-    assert task_map["Update payrise request"].section == "Due This Week"
+    assert task_map["Update project brief"].section == "Due This Week"
     assert task_map["Check booking status"].section == "Upcoming"
     assert task_map["Finish The Source"].section == "No Deadline"
     assert task_map["Sort out phone bill"].section == "Personal"
@@ -72,26 +72,26 @@ def test_parse_done_tasks(sample_backlog: Path) -> None:
     task_map = {t.name: t for t in tasks}
 
     assert task_map["Already done task"].done is True
-    assert task_map["Update payrise request"].done is False
+    assert task_map["Update project brief"].done is False
 
 
 def test_parse_estimates(sample_backlog: Path) -> None:
     tasks = parse_backlog(sample_backlog)
     task_map = {t.name: t for t in tasks}
 
-    assert task_map["Update payrise request"].estimate_mins == 60
+    assert task_map["Update project brief"].estimate_mins == 60
     assert task_map["Check booking status"].estimate_mins == 10
     assert task_map["Sort out phone bill"].estimate_mins == 15
-    assert task_map["Plan India bday weekend"].estimate_mins == 60
+    assert task_map["Plan a weekend away"].estimate_mins == 60
 
 
 def test_parse_tags(sample_backlog: Path) -> None:
     tasks = parse_backlog(sample_backlog)
     task_map = {t.name: t for t in tasks}
 
-    assert "#work" in task_map["Update payrise request"].tags
-    assert "#work" in task_map["Record demo on witness flow OGG"].tags
-    assert "#product" in task_map["Record demo on witness flow OGG"].tags
+    assert "#work" in task_map["Update project brief"].tags
+    assert "#work" in task_map["Record the release demo"].tags
+    assert "#product" in task_map["Record the release demo"].tags
     assert "#personal" in task_map["Sort out phone bill"].tags
 
 
@@ -100,7 +100,7 @@ def test_parse_dates(sample_backlog: Path) -> None:
     tasks = parse_backlog(sample_backlog, today=date(2026, 3, 6))
     task_map = {t.name: t for t in tasks}
 
-    assert task_map["Update payrise request"].deadline == date(2026, 2, 20)
+    assert task_map["Update project brief"].deadline == date(2026, 2, 20)
     assert task_map["Check booking status"].deadline == date(2026, 2, 23)
     assert task_map["Improper sequencing"].deadline == date(2026, 3, 5)
 
@@ -118,7 +118,7 @@ def test_parse_actionable_filters_correctly(sample_backlog: Path) -> None:
     names = [t.name for t in actionable]
 
     # Should include: tasks with deadline AND estimate AND not done
-    assert "Update payrise request" in names
+    assert "Update project brief" in names
     assert "Check booking status" in names
 
     # Should exclude: done tasks
@@ -127,7 +127,7 @@ def test_parse_actionable_filters_correctly(sample_backlog: Path) -> None:
     assert "No estimate task" not in names
     # Should exclude: no deadline
     assert "Finish The Source" not in names
-    assert "Plan India bday weekend" not in names
+    assert "Plan a weekend away" not in names
 
 
 def test_parse_line_numbers(sample_backlog: Path) -> None:

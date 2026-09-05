@@ -274,7 +274,7 @@ def append_daily_note(daily_notes_dir: Path, reschedules: list[Reschedule]) -> P
 
 
 # Default location for the schedule summary file
-SCHEDULE_SUMMARY_PATH = Path.home() / "Code" / "reflow" / "schedule.md"
+SCHEDULE_SUMMARY_PATH = Path.home() / "code" / "second-brain" / "schedule.md"
 
 
 def write_schedule_summary(

@@ -34,16 +34,16 @@ class Config:
         "REFLOW_CALENDAR_ID",
         "your-reflow-calendar-id@group.calendar.google.com"
     ))
-    working_hours_start: int = field(default_factory=lambda: _env_int("WORKING_HOURS_START", 11))
-    working_hours_end: int = field(default_factory=lambda: _env_int("WORKING_HOURS_END", 19))
+    working_hours_start: int = field(default_factory=lambda: _env_int("WORKING_HOURS_START", 9))
+    working_hours_end: int = field(default_factory=lambda: _env_int("WORKING_HOURS_END", 17))
     lunch_start: int = field(default_factory=lambda: _env_int("LUNCH_START", 13))
     lunch_end: int = field(default_factory=lambda: _env_int("LUNCH_END", 14))
     lookahead_days: int = field(default_factory=lambda: _env_int("LOOKAHEAD_DAYS", 5))
     credentials_path: Path = field(default_factory=lambda: Path(_env(
-        "CREDENTIALS_PATH", "~/Code/reflow/credentials.json"
+        "CREDENTIALS_PATH", "~/code/second-brain/credentials.json"
     )).expanduser())
     token_path: Path = field(default_factory=lambda: Path(_env(
-        "TOKEN_PATH", "~/Code/reflow/token.json"
+        "TOKEN_PATH", "~/code/second-brain/token.json"
     )).expanduser())
 
 
