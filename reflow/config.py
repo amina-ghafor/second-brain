@@ -28,7 +28,7 @@ class Config:
     backlog_path: Path = field(default_factory=lambda: Path(_env(
         "BACKLOG_PATH", "~/Projects/Tasks/Backlog.md"
     )).expanduser())
-    timezone: str = field(default_factory=lambda: _env("TIMEZONE", "Europe/Madrid"))
+    timezone: str = field(default_factory=lambda: _env("TIMEZONE", "Europe/London"))
     calendar_id: str = field(default_factory=lambda: _env("CALENDAR_ID", "primary"))
     reflow_calendar_id: str = field(default_factory=lambda: _env(
         "REFLOW_CALENDAR_ID",

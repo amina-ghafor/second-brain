@@ -44,7 +44,7 @@ def _make_config(**overrides) -> Config:
         "lunch_start": 13,
         "lunch_end": 14,
         "lookahead_days": 5,
-        "timezone": "Europe/Madrid",
+        "timezone": "Europe/London",
     }
     defaults.update(overrides)
 
@@ -99,7 +99,7 @@ class TestFindSlotForTask:
         """Task fits in the morning block (11:00-13:00)."""
         import pytz
 
-        tz = pytz.timezone("Europe/Madrid")
+        tz = pytz.timezone("Europe/London")
         today = date(2026, 2, 19)
         task = _make_task("Morning task", estimate_mins=60)
         config = _make_config()
@@ -128,7 +128,7 @@ class TestFindSlotForTask:
         """If today is full, find a slot tomorrow."""
         import pytz
 
-        tz = pytz.timezone("Europe/Madrid")
+        tz = pytz.timezone("Europe/London")
         today = date(2026, 2, 19)  # Thursday
         task = _make_task("Big task", estimate_mins=60)
         config = _make_config()
@@ -177,7 +177,7 @@ class TestRescheduleOverdue:
     def test_dry_run_does_not_create_events(self) -> None:
         import pytz
 
-        tz = pytz.timezone("Europe/Madrid")
+        tz = pytz.timezone("Europe/London")
         today = date(2026, 2, 19)
         task = _make_task("Overdue task", deadline=date(2026, 2, 18))
         config = _make_config()
@@ -205,7 +205,7 @@ class TestRescheduleOverdue:
     def test_skips_existing_reflow_event(self) -> None:
         import pytz
 
-        tz = pytz.timezone("Europe/Madrid")
+        tz = pytz.timezone("Europe/London")
         task = _make_task("Already scheduled", deadline=date(2026, 2, 18))
         config = _make_config()
 
@@ -255,7 +255,7 @@ class TestFreeSlotsSkipsPastTime:
 
         from reflow.calendar_client import CalendarClient
 
-        tz = pytz.timezone("Europe/Madrid")
+        tz = pytz.timezone("Europe/London")
         today = date(2026, 2, 20)
         config = _make_config()
         config.calendar_id = "primary"
@@ -272,7 +272,7 @@ class TestFreeSlotsSkipsPastTime:
             "nextPageToken": None,
         }
 
-        # Freeze "now" to 15:00 Madrid time
+        # Freeze "now" to 15:00 London time
         fake_now = tz.localize(datetime(2026, 2, 20, 15, 0))
         with patch("reflow.calendar_client.datetime") as mock_dt:
             mock_dt.now.return_value = fake_now
@@ -292,7 +292,7 @@ class TestFreeSlotsSkipsPastTime:
 
         from reflow.calendar_client import CalendarClient
 
-        tz = pytz.timezone("Europe/Madrid")
+        tz = pytz.timezone("Europe/London")
         future = date(2026, 2, 21)
         config = _make_config()
         config.calendar_id = "primary"
@@ -324,7 +324,7 @@ class TestScheduleAll:
     def test_schedules_upcoming_tasks(self) -> None:
         import pytz
 
-        tz = pytz.timezone("Europe/Madrid")
+        tz = pytz.timezone("Europe/London")
         today = date(2026, 2, 19)
         task = _make_task("Tomorrow task", deadline=date(2026, 2, 20), estimate_mins=60)
         config = _make_config()

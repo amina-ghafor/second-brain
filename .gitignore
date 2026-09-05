@@ -8,4 +8,4 @@ build/
 .env
 credentials.json
 token.json
-motion.log
+reflow.log

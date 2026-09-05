@@ -50,6 +50,10 @@ When a recurring task is marked `[x]` and `reflow run` is called, reflow auto-ge
 
 Overdue → Due This Week → Personal → Research → Admin → Writing → Upcoming
 
+The themed sections (Personal, Research, Admin, Writing) are examples. Rename them
+to your own areas of work in `scheduler.py` and `writer.py`; the scheduler only
+cares about their order, not their names.
+
 ## Dual calendar setup
 
 - **Reads** from primary calendar (to check busy times)
@@ -58,7 +62,7 @@ Overdue → Due This Week → Personal → Research → Admin → Writing → Up
 
 ## Working hours
 
-Default: 11:00–19:00, lunch 13:00–14:00 (Europe/Madrid). Configurable via .env.
+Default: 11:00–19:00, lunch 13:00–14:00 (Europe/London). Configurable via .env.
 
 ## Commands
 
