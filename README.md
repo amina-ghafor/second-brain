@@ -12,7 +12,7 @@ Built for my own use and generalised here. Plain text you own: no web app, no se
 
 **The vault** - the Markdown convention reflow reads: the backlog sections in priority order, the deadline and estimate format, the recurrence syntax. This is the only thing reflow depends on.
 
-**The commands** - one prompt file each, in `skills/`. `dayplan` builds the day from the calendar and the backlog. `capture` writes a finished session into the right notes. More arrive one at a time, each with its own note on what it does and where it helps.
+**The commands** - `dayplan` builds the day from the calendar and the backlog, `capture` writes a finished session into the right notes. Both live in [agent-skills](https://github.com/amina-ghafor/agent-skills) and read this backlog format.
 
 ## 📋 The backlog format
 
