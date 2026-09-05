@@ -1,8 +1,8 @@
 # second-brain
 
-A task list only helps if the dates on it are true. Most backlogs drift: you set deadlines, they pass, and you either re-triage the whole list by hand every morning or stop trusting it.
+A task list only helps if the dates on it are true. Most backlogs drift: you set deadlines, they pass, and you either move everything by hand each morning or stop trusting the list.
 
-second-brain keeps the list honest. Overnight, a script reads your `Backlog.md`, finds the overdue tasks, books each one into a free slot in your calendar, and rewrites its date in the file. You open your laptop to a day already blocked out and a backlog that reflects what is actually left. A few Claude Code commands read the same file, so planning a day or writing up a session works from one source.
+second-brain keeps the list honest. Overnight, a script reads your `Backlog.md` and picks out the overdue tasks. It books each into a free calendar slot and updates its date in the file. You open your laptop to a day already blocked out and a backlog that reflects what is actually left. A few Claude Code commands read the same file, so planning a day or writing up a session works from one source.
 
 Built for my own use and generalised here. Plain text you own: no web app, no server, no account. A Markdown file, a calendar, and a cron job.
 
@@ -12,7 +12,7 @@ Built for my own use and generalised here. Plain text you own: no web app, no se
 
 **The vault** - the Markdown convention reflow reads: the backlog sections in priority order, the deadline and estimate format, the recurrence syntax. This is the only thing reflow depends on.
 
-**The commands** - one prompt file each, in `skills/`. `dayplan` builds the day from the calendar and the backlog. `capture` writes a finished session into the right notes. More will land here one at a time, each with its own note on what it does and where it helps.
+**The commands** - one prompt file each, in `skills/`. `dayplan` builds the day from the calendar and the backlog. `capture` writes a finished session into the right notes. More arrive one at a time, each with its own note on what it does and where it helps.
 
 ## 📋 The backlog format
 
@@ -78,7 +78,7 @@ Copy `.env.example` to `.env` and edit. Defaults:
 - **Timezone:** `Europe/London`
 - **Working hours:** 09:00-17:00, lunch 13:00-14:00
 - **Lookahead:** 5 working days
-- **Reads** busy times from your primary calendar; **creates** events on a separate calendar set by `REFLOW_CALENDAR_ID`, so the scheduled blocks stay visually distinct.
+- **Reads** busy times from your primary calendar; **creates** events on a separate calendar set by `REFLOW_CALENDAR_ID`, so the scheduled blocks are easy to tell apart.
 
 ## Usage
 
@@ -114,6 +114,6 @@ source .venv/bin/activate
 pytest tests/ -v
 ```
 
-## 💡 One limitation
+## One limitation
 
 A scheduler that keeps finding room can carry an overcommitted list for weeks without ever forcing a decision. The backlog stays plain text so you can see the pile and decide what to drop.
