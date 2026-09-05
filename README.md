@@ -1,8 +1,10 @@
 # second-brain
 
-Run your work off one task list. The backlog is a plain Markdown file in an Obsidian vault. A daily script reads it, finds free time in your calendar, books the overdue work in, and rewrites the dates. Around that sit a few Claude Code commands that turn a working session into a plan, a set of notes, or a review.
+A task list only helps if the dates on it are true. Most backlogs drift: you set deadlines, they pass, and you either re-triage the whole list by hand every morning or stop trusting it.
 
-Built for my own use and generalised here. No web app and no server: a text file, a calendar, and a cron job.
+second-brain keeps the list honest. Overnight, a script reads your `Backlog.md`, finds the overdue tasks, books each one into a free slot in your calendar, and rewrites its date in the file. You open your laptop to a day already blocked out and a backlog that reflects what is actually left. A few Claude Code commands read the same file, so planning a day or writing up a session works from one source.
+
+Built for my own use and generalised here. Plain text you own: no web app, no server, no account. A Markdown file, a calendar, and a cron job.
 
 ## 🧩 The parts
 
@@ -112,8 +114,6 @@ source .venv/bin/activate
 pytest tests/ -v
 ```
 
-## 💡 Why
+## 💡 One limitation
 
-A backlog only works if it reschedules itself. Deadlines you set last week and never move are a wish list. Doing that by hand every morning is the first thing to slip on a busy day, so reflow does it, and the file stays honest about what is actually left.
-
-This has a limit. A scheduler that keeps finding room can carry an overcommitted list for weeks without ever forcing a decision. The backlog stays plain text so you can see the pile and decide what to drop.
+A scheduler that keeps finding room can carry an overcommitted list for weeks without ever forcing a decision. The backlog stays plain text so you can see the pile and decide what to drop.
